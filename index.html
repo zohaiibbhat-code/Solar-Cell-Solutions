@@ -185,6 +185,33 @@
   .cost-legend span{display:flex; align-items:center; gap:7px; color:var(--slate-light);}
   .cost-legend i{width:10px; height:10px; border-radius:50%; display:inline-block;}
 
+  /* ---------- on-grid model ---------- */
+  .grid-model{background:var(--navy-deep); color:var(--snow);}
+  .grid-model .section-head h2{color:var(--snow);}
+  .grid-model .section-head p{color:var(--slate-light);}
+  .model-panel{background:rgba(247,244,236,0.04); border:1px solid var(--line-dark); border-radius:var(--radius); padding:40px;}
+  .model-toggle{display:flex; gap:12px; margin-bottom:32px; flex-wrap:wrap;}
+  .model-btn{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; letter-spacing:0.03em;
+    background:transparent; color:var(--slate-light); border:1px solid var(--line-dark);
+    padding:11px 18px; border-radius:var(--radius); cursor:pointer; transition:all 0.2s ease;
+  }
+  .model-btn.active{background:var(--gold); color:var(--navy-deep); border-color:var(--gold);}
+  .model-btn:not(.active):hover{border-color:var(--slate-light); color:var(--snow);}
+  .model-svg{width:100%; height:auto; margin-bottom:12px;}
+  .node-label{font-family:'IBM Plex Mono', monospace; font-size:11px; fill:var(--slate-light); text-transform:uppercase; letter-spacing:0.04em;}
+  .flow-path{fill:none; stroke:var(--line-dark); stroke-width:2;}
+  .flow-path-grid{stroke-dasharray:0;}
+  .flow-dot{fill:var(--gold);}
+  .flow-dot-gen{fill:#EFB123;}
+  .flow-dot-export{fill:#EFB123; opacity:0.85;}
+  .flow-dot-import{fill:#E8896B;}
+  .model-stats{display:flex; gap:1px; background:var(--line-dark); border:1px solid var(--line-dark); margin-top:28px;}
+  .model-stat{flex:1; background:var(--navy-deep); padding:18px 20px; display:flex; flex-direction:column; gap:6px;}
+  .ms-label{font-family:'IBM Plex Mono', monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--slate-light);}
+  .ms-val{font-family:'IBM Plex Mono', monospace; font-size:22px; font-weight:600; color:var(--gold);}
+  .model-note{margin-top:20px; font-size:13.5px; color:var(--slate-light); font-style:italic;}
+
   /* ---------- process ---------- */
   .process{background:var(--snow-dim);}
   .process-track{position:relative;}
@@ -253,9 +280,17 @@
   .cred p{font-size:14px; color:var(--slate-light);}
   .closing-line{font-family:'Fraunces', serif; font-style:italic; font-size:22px; margin-top:48px; color:var(--snow);}
 
+  /* ---------- installations (real photos) ---------- */
+  .install-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:24px;}
+  .install-card{border:1px solid var(--line-light); overflow:hidden; border-radius:var(--radius); background:var(--snow);}
+  .install-card img{width:100%; height:auto; display:block;}
+  .install-card figcaption{padding:14px 16px; font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--slate); border-top:1px solid var(--line-light);}
+  .install-disclaimer{font-size:13px; color:var(--slate-light); font-style:italic; margin-top:-30px; margin-bottom:44px; max-width:640px;}
+
   /* ---------- service area ---------- */
   .service{display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:start;}
-  .district-list{display:flex; flex-wrap:wrap; gap:10px; margin-top:22px;}
+  .district-list{display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; margin-bottom:22px;}
+  .district-group-lbl{font-family:'IBM Plex Mono', monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--gold-deep); margin-top:20px;}
   .district-list span{
     font-family:'IBM Plex Mono', monospace; font-size:12px; padding:9px 16px; border:1px solid var(--line-light);
     border-radius:20px; color:var(--slate);
@@ -330,6 +365,9 @@
     .contact-grid{grid-template-columns:1fr;}
     .form-row{grid-template-columns:1fr;}
     .foot-links{gap:32px;}
+    .model-panel{padding:28px 20px;}
+    .model-stats{flex-direction:column;}
+    .install-grid{grid-template-columns:1fr 1fr;}
   }
   @media (max-width:560px){
     .wrap{padding:0 20px;}
@@ -341,6 +379,8 @@
     .pkg-grid{grid-template-columns:1fr;}
     .foot-top{flex-direction:column;}
     .foot-links{flex-wrap:wrap; gap:28px;}
+    .model-toggle{flex-direction:column;}
+    .install-grid{grid-template-columns:1fr;}
   }
 </style>
 </head>
@@ -437,11 +477,101 @@
   </div>
 </section>
 
+<!-- ================= HOW ON-GRID SOLAR WORKS (INTERACTIVE MODEL) ================= -->
+<section id="how-solar-works" class="grid-model">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">02 / The Technology</p>
+      <h2>How On-Grid Solar Actually Works</h2>
+      <p>Your system stays connected to the grid at all times. Power flows one of two ways depending on sunlight — toggle below to see both.</p>
+    </div>
+
+    <div class="model-panel reveal">
+      <div class="model-toggle">
+        <button type="button" class="model-btn active" id="btnDay">Daytime &mdash; Generating Surplus</button>
+        <button type="button" class="model-btn" id="btnNight">Low Sun / Night &mdash; Drawing Power</button>
+      </div>
+
+      <svg class="model-svg" id="modelSvg" viewBox="0 0 900 340" xmlns="http://www.w3.org/2000/svg">
+        <!-- connecting paths -->
+        <path id="pathSunPanel" d="M 110 90 L 110 150" class="flow-path"/>
+        <path id="pathPanelInv" d="M 110 150 L 300 150" class="flow-path"/>
+        <path id="pathInvMeter" d="M 300 150 L 480 150" class="flow-path"/>
+        <path id="pathMeterHome" d="M 480 150 L 660 150" class="flow-path" id="pathMeterHome"/>
+        <path id="pathMeterGrid" d="M 480 150 L 480 260 L 660 260" class="flow-path flow-path-grid"/>
+
+        <!-- Sun -->
+        <g transform="translate(110,55)">
+          <circle r="26" fill="none" stroke="#EFB123" stroke-width="2"/>
+          <g stroke="#EFB123" stroke-width="2">
+            <line x1="0" y1="-38" x2="0" y2="-46"/>
+            <line x1="0" y1="38" x2="0" y2="46"/>
+            <line x1="-38" y1="0" x2="-46" y2="0"/>
+            <line x1="38" y1="0" x2="46" y2="0"/>
+            <line x1="-27" y1="-27" x2="-33" y2="-33"/>
+            <line x1="27" y1="27" x2="33" y2="33"/>
+            <line x1="27" y1="-27" x2="33" y2="-33"/>
+            <line x1="-27" y1="27" x2="-33" y2="33"/>
+          </g>
+        </g>
+        <text x="110" y="20" text-anchor="middle" class="node-label">Sun</text>
+
+        <!-- Solar Panel -->
+        <g transform="translate(70,150)">
+          <rect x="0" y="0" width="80" height="42" rx="2" fill="none" stroke="#F7F4EC" stroke-width="1.6"/>
+          <line x1="20" y1="0" x2="20" y2="42" stroke="#F7F4EC" stroke-width="1"/>
+          <line x1="40" y1="0" x2="40" y2="42" stroke="#F7F4EC" stroke-width="1"/>
+          <line x1="60" y1="0" x2="60" y2="42" stroke="#F7F4EC" stroke-width="1"/>
+          <line x1="0" y1="21" x2="80" y2="21" stroke="#F7F4EC" stroke-width="1"/>
+        </g>
+        <text x="110" y="215" text-anchor="middle" class="node-label">Solar Panels</text>
+
+        <!-- Inverter -->
+        <g transform="translate(270,128)">
+          <rect x="0" y="0" width="60" height="44" rx="3" fill="none" stroke="#F7F4EC" stroke-width="1.6"/>
+          <path d="M 8 30 L 20 30 L 26 14 L 34 40 L 40 22 L 52 22" fill="none" stroke="#EFB123" stroke-width="1.6"/>
+        </g>
+        <text x="300" y="196" text-anchor="middle" class="node-label">Inverter</text>
+
+        <!-- Meter -->
+        <g transform="translate(480,150)">
+          <circle r="24" fill="none" stroke="#F7F4EC" stroke-width="1.6"/>
+          <circle r="3" fill="#F7F4EC"/>
+          <line x1="0" y1="0" x2="12" y2="-9" stroke="#EFB123" stroke-width="1.8" id="meterNeedle"/>
+        </g>
+        <text x="480" y="196" text-anchor="middle" class="node-label">Utility Meter</text>
+
+        <!-- Home -->
+        <g transform="translate(660,128)">
+          <polygon points="22,0 44,20 44,44 0,44 0,20" fill="none" stroke="#F7F4EC" stroke-width="1.6"/>
+          <rect x="16" y="28" width="12" height="16" fill="none" stroke="#F7F4EC" stroke-width="1.2"/>
+        </g>
+        <text x="682" y="196" text-anchor="middle" class="node-label">Your Home</text>
+
+        <!-- Grid -->
+        <g transform="translate(660,238)">
+          <line x1="22" y1="0" x2="22" y2="44" stroke="#F7F4EC" stroke-width="1.6"/>
+          <line x1="6" y1="10" x2="38" y2="10" stroke="#F7F4EC" stroke-width="1.4"/>
+          <line x1="10" y1="22" x2="34" y2="22" stroke="#F7F4EC" stroke-width="1.4"/>
+        </g>
+        <text x="682" y="300" text-anchor="middle" class="node-label">Grid</text>
+      </svg>
+
+      <div class="model-stats" id="modelStats">
+        <div class="model-stat"><span class="ms-label">Generating</span><span class="ms-val" id="statGen">4.2 kW</span></div>
+        <div class="model-stat"><span class="ms-label">Home is using</span><span class="ms-val" id="statHome">1.8 kW</span></div>
+        <div class="model-stat"><span class="ms-label" id="statFlowLabel">Exporting to grid</span><span class="ms-val" id="statFlow">2.4 kW</span></div>
+      </div>
+      <p class="model-note" id="modelNote">Surplus power is exported to the grid and credited to your account &mdash; this is net metering.</p>
+    </div>
+  </div>
+</section>
+
 <!-- ================= PROCESS ================= -->
 <section id="process" class="process">
   <div class="wrap">
     <div class="section-head reveal">
-      <p class="eyebrow">02 / How It Works</p>
+      <p class="eyebrow">03 / Your Journey</p>
       <h2>How Easy It Is to Go Solar</h2>
       <p>Five steps. We handle four of them.</p>
     </div>
@@ -486,7 +616,7 @@
 <section id="packages">
   <div class="wrap">
     <div class="section-head reveal">
-      <p class="eyebrow">03 / Packages</p>
+      <p class="eyebrow">04 / Packages</p>
       <h2>Choose the System That Matches Your Home</h2>
     </div>
     <p class="pkg-note reveal">Pricing below reflects current government-approved rates for residential installations, inclusive of both J&amp;K state and MNRE central subsidies. Your exact system size is confirmed during the free site inspection (Step 3) — the figures below are a starting guide, not a final quote.</p>
@@ -560,7 +690,7 @@
 <section id="warranty" style="padding:0;">
   <div class="split">
     <div class="split-panel reveal">
-      <p class="eyebrow">04 / Financing</p>
+      <p class="eyebrow">05 / Financing</p>
       <h2 style="font-size:28px;">No Need to Pay It All Upfront</h2>
       <p>Solar is a 25+ year investment, but you don't need to fund it in one payment. Through our banking partners — J&amp;K Bank and SBI — finance your system with easy EMI options.</p>
       <div class="stat-row">
@@ -570,7 +700,7 @@
       <p>Combined with your government subsidy (up to ₹94,800), your actual upfront cost is significantly lower than the full project price.</p>
     </div>
     <div class="split-panel reveal">
-      <p class="eyebrow">05 / Warranty &amp; After-Sales</p>
+      <p class="eyebrow">06 / Warranty &amp; After-Sales</p>
       <h2 style="font-size:28px;">Backed Long After Installation</h2>
       <p>Your system comes with a 30-year performance warranty, so your investment is protected well beyond the day it's switched on.</p>
       <ul class="warranty-list">
@@ -588,7 +718,7 @@
 <section class="why-us">
   <div class="wrap">
     <div class="section-head reveal">
-      <p class="eyebrow on-dark">06 / Why Choose Us</p>
+      <p class="eyebrow on-dark">07 / Why Choose Us</p>
       <h2>Why Choose Solar Cell Solutions</h2>
       <p>We're not the biggest solar company in India. We're the one that actually shows up in your district.</p>
     </div>
@@ -603,7 +733,7 @@
       </div>
       <div class="cred">
         <h4>190+ Homes Powered</h4>
-        <p>Real installations across Srinagar, Budgam, Ganderbal, Bandipora, Baramulla, Anantnag, Kupwara, Pulwama, Shopian, and Kulgam.</p>
+        <p>Real installations across all 20 districts of Jammu &amp; Kashmir &mdash; Srinagar, Budgam, Ganderbal, Bandipora, Baramulla, Anantnag, Kupwara, Pulwama, Shopian, Kulgam, Jammu, Kathua, Samba, Udhampur, Reasi, Rajouri, Poonch, Doda, Ramban, and Kishtwar.</p>
       </div>
       <div class="cred">
         <h4>We Handle the Process</h4>
@@ -614,15 +744,46 @@
   </div>
 </section>
 
+<!-- ================= INSTALLATIONS ================= -->
+<section id="installations">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">08 / What a System Looks Like</p>
+      <h2>Built for the Roof, Not Just the Sale</h2>
+      <p>Illustrative renderings of a rooftop array — aerial, side, and roof-level detail.</p>
+    </div>
+    <div class="install-grid reveal">
+      <figure class="install-card">
+        <img src="images/install-aerial.jpg" alt="Aerial view of a rooftop solar array">
+        <figcaption>Aerial View</figcaption>
+      </figure>
+      <figure class="install-card">
+        <img src="images/install-side.jpg" alt="Side profile of a home with rooftop solar">
+        <figcaption>Side Profile</figcaption>
+      </figure>
+      <figure class="install-card">
+        <img src="images/install-topdown.jpg" alt="Top-down detail of solar panel roof layout">
+        <figcaption>Roof-Level Detail</figcaption>
+      </figure>
+    </div>
+    <p class="install-disclaimer reveal">Illustrative renderings, not photos of a specific completed site. Replace with your own installation photos any time — see the images/ folder.</p>
+  </div>
+</section>
+
 <!-- ================= SERVICE AREA ================= -->
 <section>
   <div class="wrap service">
     <div class="reveal">
-      <p class="eyebrow">07 / Service Area</p>
+      <p class="eyebrow">09 / Service Area</p>
       <h2>Where We Work</h2>
-      <p style="color:var(--slate); margin-top:14px;">One Srinagar team covers inspection, approvals, installation, and after-sales across ten districts.</p>
+      <p style="color:var(--slate); margin-top:14px;">Covering all 20 districts across Jammu &amp; Kashmir &mdash; inspection, approvals, installation, and after-sales.</p>
+      <p class="district-group-lbl">Kashmir Division</p>
       <div class="district-list">
         <span>Srinagar</span><span>Budgam</span><span>Ganderbal</span><span>Bandipora</span><span>Baramulla</span><span>Anantnag</span><span>Kupwara</span><span>Pulwama</span><span>Shopian</span><span>Kulgam</span>
+      </div>
+      <p class="district-group-lbl">Jammu Division</p>
+      <div class="district-list">
+        <span>Jammu</span><span>Kathua</span><span>Samba</span><span>Udhampur</span><span>Reasi</span><span>Rajouri</span><span>Poonch</span><span>Doda</span><span>Ramban</span><span>Kishtwar</span>
       </div>
     </div>
     <div class="reveal">
@@ -646,7 +807,7 @@
 <section id="contact" class="contact">
   <div class="wrap contact-grid">
     <div class="contact-info reveal">
-      <p class="eyebrow">08 / Get In Touch</p>
+      <p class="eyebrow">10 / Get In Touch</p>
       <h2>Thinking about solar?<br>Start with a free site consultation.</h2>
       <p>No obligation, no pressure. We'll help you understand the right system for your property.</p>
       <div class="contact-line"><span class="l">Call</span><a href="tel:+918130067505">+91 81300 67505</a></div>
@@ -684,6 +845,16 @@
             <option>Pulwama</option>
             <option>Shopian</option>
             <option>Kulgam</option>
+            <option>Jammu</option>
+            <option>Kathua</option>
+            <option>Samba</option>
+            <option>Udhampur</option>
+            <option>Reasi</option>
+            <option>Rajouri</option>
+            <option>Poonch</option>
+            <option>Doda</option>
+            <option>Ramban</option>
+            <option>Kishtwar</option>
           </select>
         </div>
       </div>
@@ -745,7 +916,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Solar Cell Solutions. All rights reserved.</span>
-      <span>Srinagar &middot; Budgam &middot; Ganderbal &middot; Bandipora &middot; Baramulla &middot; Anantnag &middot; Kupwara &middot; Pulwama &middot; Shopian &middot; Kulgam</span>
+      <span>Srinagar &middot; Budgam &middot; Ganderbal &middot; Bandipora &middot; Baramulla &middot; Anantnag &middot; Kupwara &middot; Pulwama &middot; Shopian &middot; Kulgam &middot; Jammu &middot; Kathua &middot; Samba &middot; Udhampur &middot; Reasi &middot; Rajouri &middot; Poonch &middot; Doda &middot; Ramban &middot; Kishtwar</span>
     </div>
   </div>
 </footer>
@@ -780,6 +951,116 @@
     line.setAttribute('stroke-opacity', 0.12 + (i % 3) * 0.08);
     rayGroup.appendChild(line);
   }
+
+  // ---------- interactive on-grid solar model ----------
+  (function(){
+    const svg = document.getElementById('modelSvg');
+    if(!svg) return;
+
+    const btnDay = document.getElementById('btnDay');
+    const btnNight = document.getElementById('btnNight');
+    const statGen = document.getElementById('statGen');
+    const statHome = document.getElementById('statHome');
+    const statFlow = document.getElementById('statFlow');
+    const statFlowLabel = document.getElementById('statFlowLabel');
+    const modelNote = document.getElementById('modelNote');
+
+    let animId = null;
+    let dots = [];
+
+    function clearDots(){
+      dots.forEach(d => d.el.remove());
+      dots = [];
+    }
+
+    // specs: ordered array of {id, reverse}. The chain is always walked
+    // in array order (t: 0 -> 1 across specs[0], then specs[1], ...).
+    // 'reverse' flips direction WITHIN that individual path segment only
+    // — it does not change which segment comes first. That distinction
+    // is what makes multi-segment reversed chains (e.g. grid -> meter)
+    // trace the correct physical route instead of jumping into the
+    // middle of the wrong segment.
+    function makeChain(specs){
+      return specs.map(s => {
+        const p = document.getElementById(s.id);
+        return {path: p, length: p.getTotalLength(), reverse: !!s.reverse};
+      });
+    }
+
+    function pointOnChain(chain, totalLen, t){
+      let dist = t * totalLen;
+      for(const seg of chain){
+        if(dist <= seg.length){
+          return seg.path.getPointAtLength(seg.reverse ? (seg.length - dist) : dist);
+        }
+        dist -= seg.length;
+      }
+      const last = chain[chain.length - 1];
+      return last.path.getPointAtLength(last.reverse ? 0 : last.length);
+    }
+
+    function addDots(specs, count, colorClass){
+      const chain = makeChain(specs);
+      const totalLen = chain.reduce((s, seg) => s + seg.length, 0);
+      for(let i = 0; i < count; i++){
+        const el = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        el.setAttribute('r', 3.5);
+        el.setAttribute('class', 'flow-dot ' + colorClass);
+        svg.appendChild(el);
+        dots.push({el, chain, totalLen, offset: i / count});
+      }
+    }
+
+    function animate(timestamp){
+      const speed = 0.00022;
+      dots.forEach(d => {
+        const t = ((timestamp * speed) + d.offset) % 1;
+        const pt = pointOnChain(d.chain, d.totalLen, t);
+        d.el.setAttribute('cx', pt.x);
+        d.el.setAttribute('cy', pt.y);
+      });
+      animId = requestAnimationFrame(animate);
+    }
+
+    function setMode(mode){
+      clearDots();
+      if(animId) cancelAnimationFrame(animId);
+
+      if(mode === 'day'){
+        btnDay.classList.add('active'); btnNight.classList.remove('active');
+        // Sun -> Panels -> Inverter -> Meter -> Home, all forward.
+        addDots([
+          {id:'pathSunPanel'}, {id:'pathPanelInv'}, {id:'pathInvMeter'}, {id:'pathMeterHome'}
+        ], 5, 'flow-dot-gen');
+        // Meter -> Grid, forward (this path is authored Meter-to-Grid already).
+        addDots([{id:'pathMeterGrid'}], 3, 'flow-dot-export');
+        statGen.textContent = '4.2 kW';
+        statHome.textContent = '1.8 kW';
+        statFlowLabel.textContent = 'Exporting to grid';
+        statFlow.textContent = '2.4 kW';
+        modelNote.textContent = 'Surplus power is exported to the grid and credited to your account — this is net metering.';
+      } else {
+        btnNight.classList.add('active'); btnDay.classList.remove('active');
+        // Grid -> Meter -> Home. pathMeterGrid is authored Meter-to-Grid,
+        // so it needs reverse:true to run Grid-to-Meter first; pathMeterHome
+        // is already authored Meter-to-Home, so it runs forward second —
+        // the two meet correctly at the meter in between.
+        addDots([
+          {id:'pathMeterGrid', reverse:true}, {id:'pathMeterHome'}
+        ], 5, 'flow-dot-import');
+        statGen.textContent = '0 kW';
+        statHome.textContent = '1.1 kW';
+        statFlowLabel.textContent = 'Importing from grid';
+        statFlow.textContent = '1.1 kW';
+        modelNote.textContent = 'With no sunlight, your home draws power back from the grid automatically — no switch to flip, no interruption.';
+      }
+      animId = requestAnimationFrame(animate);
+    }
+
+    btnDay.addEventListener('click', () => setMode('day'));
+    btnNight.addEventListener('click', () => setMode('night'));
+    setMode('day');
+  })();
 
   // =====================================================================
   // CONTACT FORM — SENDS DETAILS VIA WHATSAPP (no backend, no account needed)
